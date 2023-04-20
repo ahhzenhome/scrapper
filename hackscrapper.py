@@ -1,6 +1,7 @@
 import requests
 from pprint import pprint
 from bs4 import BeautifulSoup
+import newsletter
 
 QUALIFIED_SCORE = 100
 MAX_PAGE = 5
@@ -22,7 +23,7 @@ def get_news(url, maxpage = MAX_PAGE):
     return allnews
 
 def get_news_data(soup):
-    stories = soup.select(".athing")
+    stories = soup.select(".athing")#19042023
     votes = soup.select(".score")
     ages = soup.select(".age")
 
@@ -30,14 +31,18 @@ def get_news_data(soup):
 
     for story in stories:
         news = {}
-        link = story.select(".storylink")[0]
-        storyid = story.get("id")
+        # link = story.select(".storylink")[0]
+        link = story.select(".titleline")[0].find("a") #19042023 OK
+
+        storyid = story.get("id")   #OK
         storyage = ""
         
-        storyage = [age.find("a").text for age in ages if storyid in age.find("a").get("href")][0]
+        # storyage = [age.find("a").text for age in ages if storyid in age.find("a").get("href")][0]
+        storyage = [age.text for age in ages if storyid in age.find("a").get("href").split("=")[1]][0]
         news.update({"storyid": storyid, "title": link.text,"url": link.get("href"), "age": storyage})
         try:
-            votetext = [item for item in votes if storyid in item["id"]][0]
+            storyid2 = 'score_' + storyid
+            votetext = [item for item in votes if storyid2 in item["id"]][0]
         except IndexError:
             news.update({"score": 0})
         else:
@@ -58,5 +63,11 @@ def display_news():
         pprint(news)
         print()
 
+def generate_news_email():
+    allnews = get_news(url)
+    allnews = sorted(allnews, key=lambda key: key["score"], reverse=True)
+    newsletter.send_email(allnews)
+
 if __name__ == "__main__":
-    display_news()
+    generate_news_email()
+    
