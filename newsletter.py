@@ -4,6 +4,7 @@ from datetime import datetime
 from email.message import EmailMessage
 from string import Template
 from pathlib import Path
+import os
 
 path_item = [Path().home(), "project", "scrapper", "news_template.html"]
 li = "<li><h3>LISTITEM</h3></li>"
@@ -37,7 +38,7 @@ def populate_template(news_data):
 def send_email(news_data):
 
 	email = EmailMessage()
-	email["from"] = "Pizen"
+	email["from"] = f"{os.getlogin()} <{os.getenv('UID_EMAIL')}@gmail.com>"
 	email["to"] = os.getenv("MAIL_LIST").split(":")
 	email["subject"] = "Hacker News NOW!"
 
@@ -49,4 +50,4 @@ def send_email(news_data):
 	    smtp.starttls()
 	    smtp.login(credential.username, credential.password)
 	    smtp.send_message(email)
-	    print("Daily News Letter is Sent")
+	    print(f"Daily News Letter is Sent by {email.get('from')}")
